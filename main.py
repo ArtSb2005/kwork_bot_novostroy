@@ -28,6 +28,7 @@ class AddRecord(StatesGroup):
 
 class Mailing(StatesGroup):
     id = State()
+    status = State()
     text = State()
 
 class MailingFile(StatesGroup):
@@ -104,12 +105,6 @@ async def del_records_del(message: types.Message, state: FSMContext):
     db.update_status(message.from_user.id, "Прошёл", message.contact['phone_number'])
     await bot.send_message(message.from_user.id, "В ближайшее время вам перезвонят.")
 
-
-@dp.message_handler(commands="catelogs")
-async def cmd_start(message: types.Message):
-    await message.answer(
-        "Скачать каталог новостроек")
-
 @dp.message_handler(commands="contacts")
 async def cmd_start(message: types.Message):
     await message.answer(
@@ -117,6 +112,16 @@ async def cmd_start(message: types.Message):
 
 @dp.message_handler(commands="mailing")
 async def cmd_start(message: types.Message):
+    markup = ReplyKeyboardMarkup()
+    markup.add(KeyboardButton('Оставили телефон'))
+    markup.add(KeyboardButton('Не оставили телефон'))
+    await message.answer(
+        "Чтобы пустить рассылку по пользователям выберите категорию пользователей введите текст", reply_markup=markup)
+    await Mailing.status.set()
+
+@dp.message_handler(state=Mailing.status)
+async def cmd_start(message: types.Message, state: FSMContext):
+    await state.update_data(status=message.text)
     await message.answer(
         "Чтобы пустить рассылку по пользователям введите текст")
     await Mailing.text.set()
@@ -124,10 +129,16 @@ async def cmd_start(message: types.Message):
 @dp.message_handler(state=Mailing.text)
 async def del_records_del(message: types.Message, state: FSMContext):
     mes = message.text
+    data = await state.get_data()
     await state.finish()
     await bot.send_message(message.from_user.id, f"Рассылка началась")
     for i in db.get_users():
-        await bot.send_message(i[0], mes)
+        if data['status'] == 'Оставили телефон':
+            if i[1] == 'Прошёл':
+                await bot.send_message(i[0], mes)
+        else:
+            if i[1] == 'Не прошёл':
+                await bot.send_message(i[0], mes)
 
 @dp.message_handler(commands="get_users")
 async def cmd_start(message: types.Message):

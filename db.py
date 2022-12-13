@@ -18,7 +18,7 @@ class Database:
 
     def get_users(self):
         with self.conn:
-            result = self.cursor.execute("SELECT user_id FROM users").fetchall()
+            result = self.cursor.execute("SELECT user_id, status FROM users").fetchall()
             return result
 
     def get_all_users(self):
