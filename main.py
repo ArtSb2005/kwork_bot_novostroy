@@ -1,6 +1,8 @@
 import asyncio
 import io
 import logging
+import time
+
 from aiogram import Bot, Dispatcher, types
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
@@ -10,7 +12,7 @@ from aiogram.utils import executor
 from db import Database
 from keyboard import *
 
-bot = Bot('5838095289:AAG_XFdEJUmXCQ0FvJ7f3d-ERPiS6PCLiL8')
+bot = Bot('5778899030:AAEgqs1LOri_YTN_xV8jkgKkD8yQpWvvEyY')
 # Диспетчер для бота
 loop = asyncio.get_event_loop()
 dp = Dispatcher(bot, storage=MemoryStorage(), loop=loop)
@@ -43,8 +45,10 @@ async def cmd_start(message: types.Message):
     await message.answer("Я виртуальный помощник Бутика новостроек RELOCX. В этом чате вы можете оформить подборку новостроек по вашим критериям. Ответьте на 3 вопроса, чтобы заказать бесплатный каталог и получить подарок.")
     try:
         db.add_user(message.from_user.id, message.from_user.username, "Не прошёл")
+        await bot.send_message(-1001563476682, f"Пользователь: @{message.from_user.username} зарегестрировался")
     except:
         pass
+
     await message.answer(
         "Укажите цель покупки квартиры в Москве:", reply_markup=purpose())
     await AddRecord.numb_rooms.set()
@@ -80,6 +84,14 @@ async def del_records_del(message: types.Message, state: FSMContext):
     await state.update_data(phone=message.contact['phone_number'])
     data = await state.get_data()
     db.update_status(message.from_user.id, "Прошёл", data['phone'])
+    await bot.send_message(-1001563476682, f"""Пользователь: @{message.from_user.username}
+    id: {message.from_user.id}
+    status: Прошёл
+    Номер телефона: {message.contact['phone_number']}
+    Ответы: 
+    {data['purpose']}
+    {data['numb_rooms']}
+    {data['cost']}""")
     await bot.send_message(message.from_user.id, "Благодарим за прохождение опроса, заканчивается вёрстка вашего каталога, в скором времени вы его получите.")
     try:
         doc = open('file.pdf', 'rb')
@@ -91,7 +103,7 @@ async def del_records_del(message: types.Message, state: FSMContext):
 @dp.message_handler(commands="expert")
 async def cmd_start(message: types.Message):
     await message.answer(
-        "Ссылка на эксперта.")
+        "Ссылка на эксперта: @bav_bav")
 
 @dp.message_handler(commands="call")
 async def cmd_start(message: types.Message):
@@ -102,13 +114,15 @@ async def cmd_start(message: types.Message):
 @dp.message_handler(content_types=types.ContentType.CONTACT, state=Call.phone)
 async def del_records_del(message: types.Message, state: FSMContext):
     await state.finish()
-    db.update_status(message.from_user.id, "Прошёл", message.contact['phone_number'])
+    await bot.send_message(-1001563476682, f"""Пользователь: @{message.from_user.username}
+        Номер телефона: {message.contact['phone_number']}
+        Требует обратную связь""")
     await bot.send_message(message.from_user.id, "В ближайшее время вам перезвонят.")
 
 @dp.message_handler(commands="contacts")
 async def cmd_start(message: types.Message):
     await message.answer(
-        "Отвечаем на вопросы ежедневно с 10 до 20 часов по телефону +7 (495) 032-51-11.")
+        "Отвечаем на вопросы ежедневно с 10 до 20 часов по телефону +7 (965) 392-61-69.")
 
 @dp.message_handler(commands="mailing")
 async def cmd_start(message: types.Message):
